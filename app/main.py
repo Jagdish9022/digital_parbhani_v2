@@ -1,13 +1,12 @@
 from fastapi import FastAPI, UploadFile, File, Query, Request, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.db.postgres import insert_services, search_nearby
+from sqlalchemy import select
+from app.db.postgres import AsyncSessionLocal, ServiceDB, insert_services, search_nearby
 from app.utils.common import parse_csv, extract_location_and_service
 from app.db.models import Service, UserQuery
 import requests
 from geopy.distance import geodesic
-from typing import Dict, Any, Optional
 from app.db.postgres import init_db
-import asyncio
 
 app = FastAPI()
 
@@ -23,15 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/add_service/")
-async def add_service(service: Service):
-    await insert_services([service])  # <-- await here!
-    return {"message": "Service added successfully."}
-
 @app.post("/upload_services/")
 async def upload(file: UploadFile = File(...)):
     services = parse_csv(file)
-    await insert_services(services)  # <-- await here!
+    await insert_services(services)  
     return {"message": f"{len(services)} services uploaded successfully."}
 
 @app.post("/get_help/")
@@ -158,3 +152,12 @@ async def get_help(user_query: UserQuery = Body(...)):
         "radius_km": radius_km,
         "nearby_services": filtered
     }
+
+@app.get('/get_services')
+async def get_all_service():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(ServiceDB.type).distinct()
+        )
+        types = result.scalars().all()
+        return sorted(types)
