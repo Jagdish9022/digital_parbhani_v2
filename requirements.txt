@@ -3,8 +3,6 @@ uvicorn
 pydantic
 pandas
 python-multipart
-sqlalchemy
-asyncpg
-geoalchemy2
-psycopg2-binary
-
+qdrant-client
+sentence-transformers
+geopy
