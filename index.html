@@ -186,23 +186,40 @@
                     (position) => {
                         userLatitude = position.coords.latitude;
                         userLongitude = position.coords.longitude;
-                        locationStatus.textContent = 'Your location has been detected. You can now search for services.';
+
+                        // ✅ If location is invalid, use fallback
+                        if (userLatitude < 5 || userLongitude < 5) {
+                            console.warn("Location too low, using fallback (Sangamner)");
+                            userLatitude = 19.5741;
+                            userLongitude = 74.2115;
+                            locationStatus.textContent = 'Location fallback active: Using Sangamner as current location.';
+                        } else {
+                            locationStatus.textContent = 'Your location has been detected. You can now search for services.';
+                        }
+
+                        console.log("Using coordinates:", userLatitude, userLongitude);
                         locationStatus.className = 'status info';
                         searchButton.disabled = false;
                     },
                     (error) => {
                         console.error("Error getting location:", error);
-                        locationStatus.textContent = 'Error getting your location. Please allow location access and refresh the page.';
+                        userLatitude = 19.5741;
+                        userLongitude = 74.2115;
+                        locationStatus.textContent = 'Could not detect location. Using Sangamner as fallback location.';
                         locationStatus.className = 'status error';
-                        searchButton.disabled = true;
+                        searchButton.disabled = false;
+                        console.log("Fallback coordinates:", userLatitude, userLongitude);
                     }
                 );
             } else {
-                locationStatus.textContent = 'Geolocation is not supported by your browser.';
+                userLatitude = 19.651747011778433;
+                userLongitude = 74.25908071534288;
+                locationStatus.textContent = 'Geolocation not supported. Using fallback location.';
                 locationStatus.className = 'status error';
-                searchButton.disabled = true;
+                searchButton.disabled = false;
             }
         }
+
 
         // Use Gemini to analyze the query
         async function analyzeQueryWithGemini(query) {
